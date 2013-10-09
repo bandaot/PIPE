@@ -219,11 +219,6 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
         return path.getPoint(0).getY();
     }
 
-//    public LinkedList<MarkingView> getWeight()
-//    {
-//        return _weight;
-//    }
-
     public int getSimpleWeight()
     {
         return 1;
@@ -516,19 +511,12 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
     {
         return false;
     }
+
+
     /**
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * @param id
+     * @param
      * @return
      */
-    
     public LinkedList<MarkingView> getWeightSimple(){
     	return _weight;
     }
@@ -549,50 +537,10 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
     
     public LinkedList<MarkingView> getWeight()
     {
-    	// skip the parsing process if all weights are constant
-//    	if(_noFunctionalWeights){
-//    		return _weight;
-//    	}
-
-    	// parse the weight expressions
-//    	int weight;
-//		for(int i=0;i<_weight.size();i++){
-//			if(_weight.get(i).getCurrentMarking()==0){
-//				
-//			}
-//			weightLabel.get(i).setText(_weight.get(i).getCurrentMarking()+"");
-//    	}
-    	
 		return _weight;
     }
-    
-//    public void updateArcWeight(){
-//    	MyParser parser = new MyParser();
-//    	int weight;
-//    	weightLabel=new LinkedList<NameLabel>();
-//		for(int i=0;i<_weight.size();i++){
-//			if(i>=weightLabel.size()){
-//				NameLabel nameLabel = new NameLabel(_zoomPercentage);
-//				if(_weight.get(i).getCurrentMarking() > 0)
-//	            {
-//	                nameLabel.setText(
-//	                        String.valueOf(_weight.get(i).getCurrentMarking()));
-//	            }
-//	            else
-//	            {
-//	                nameLabel.setText("");
-//	            }
-//	            nameLabel.setColor(_weight.get(i).getToken().getColor());
-//	            nameLabel.updateSize();
-//	            weightLabel.add(nameLabel);
-//
-//	           // Container
-//				
-//			}else
-//    			weightLabel.get(i).setText(_weight.get(i).getCurrentMarking()+"");
-//    	}
-//    }
-    
+
+    //TODO: Consider making _weight a HashMap, it'll improve the efficiency of this.
     public int getWeightOfTokenClass(String id)
     {
         if(_weight != null)
@@ -608,11 +556,10 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
                 	if(m.getCurrentMarking()==0){
                 		return 1;
                 	}
-                        return m.getCurrentMarking();
+                    return m.getCurrentMarking();
                 }
             }
         }
-        
         return 0;
     }
     public String getWeightFunctionOfTokenClass(String id)
