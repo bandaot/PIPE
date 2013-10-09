@@ -34,13 +34,13 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
     LinkedList<NameLabel> weightLabel = new LinkedList<NameLabel>();
     LinkedList<MarkingView> _weight = new LinkedList<MarkingView>();
 
-    private ConnectableView _source = null;
-    private ConnectableView _target = null;
+    private ConnectableView _source;
+    private ConnectableView _target;
     // private boolean deleted = false; // Used for cleanup purposes
 
     private Arc _model;
 
-    final ArcPath myPath = new ArcPath(this);
+    final ArcPath path = new ArcPath(this);
 
     // true if arc is not hidden when a bidirectional arc is used
     boolean inView = true;
@@ -56,22 +56,27 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
             String idInput, Arc model)
     {
         _model = model;
-        myPath.addPoint((float) startPositionXInput,(float) startPositionYInput, ArcPathPoint.STRAIGHT);
-        myPath.addPoint((float) endPositionXInput, (float) endPositionYInput, ArcPathPoint.STRAIGHT);
-        myPath.createPath();
+
+        //TODO: Why is this converted to float? Not only is this not safe, but the addPoint method takes a double!
+        path.addPoint((float) startPositionXInput, (float) startPositionYInput, ArcPathPoint.STRAIGHT);
+        path.addPoint((float) endPositionXInput, (float) endPositionYInput, ArcPathPoint.STRAIGHT);
+        path.createPath();
+
         updateBounds();
+
         _id = idInput;
+
         setSource(sourceInput);
         setTarget(targetInput);
-        setWeight(Copier.mediumCopy(weightInput));
+        setWeight(weightInput);
     }
 
     ArcView(ConnectableView newSource)
     {
         _source = newSource;
-        myPath.addPoint();
-        myPath.addPoint();
-        myPath.createPath();
+        path.addPoint();
+        path.addPoint();
+        path.createPath();
     }
 
     ArcView()
@@ -98,8 +103,8 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
 
     public void setWeightLabelPosition()
     {
-        int originalX = (int) (myPath.midPoint.x);
-        int originalY = (int) (myPath.midPoint.y) - 10;
+        int originalX = (int) (path.midPoint.x);
+        int originalY = (int) (path.midPoint.y) - 10;
         int x = originalX;
         int y = originalY;
         int yCount = 0;
@@ -139,8 +144,8 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
 	// Removes any current labels from the arc
     void removeLabelsFromArc()
     {
-        int x = (int) (myPath.midPoint.x);
-        int y = (int) (myPath.midPoint.y) - 10;
+        int x = (int) (path.midPoint.x);
+        int y = (int) (path.midPoint.y) - 10;
         for(NameLabel label : weightLabel)
         {
             if(!label.getText().trim().equals("") )//&& Integer.valueOf(label.getText()) > 0)
@@ -206,12 +211,12 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
 
     public double getStartPositionX()
     {
-        return myPath.getPoint(0).getX();
+        return path.getPoint(0).getX();
     }
 
     public double getStartPositionY()
     {
-        return myPath.getPoint(0).getY();
+        return path.getPoint(0).getY();
     }
 
 //    public LinkedList<MarkingView> getWeight()
@@ -234,28 +239,28 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
         {
             _target.updateEndPoint(this);
         }
-        myPath.createPath();
+        path.createPath();
     }
 
     public void setEndPoint(double x, double y, boolean type)
     {
-        myPath.setPointLocation(myPath.getEndIndex(), x, y);
-        myPath.setPointType(myPath.getEndIndex(), type);
+        path.setPointLocation(path.getEndIndex(), x, y);
+        path.setPointType(path.getEndIndex(), type);
         updateArcPosition();
     }
 
     public void setTargetLocation(double x, double y)
     {
-        myPath.setPointLocation(myPath.getEndIndex(), x, y);
-        myPath.createPath();
+        path.setPointLocation(path.getEndIndex(), x, y);
+        path.createPath();
         updateBounds();
         repaint();
     }
 
     public void setSourceLocation(double x, double y)
     {
-        myPath.setPointLocation(0, x, y);
-        myPath.createPath();
+        path.setPointLocation(0, x, y);
+        path.createPath();
         updateBounds();
         repaint();
     }
@@ -265,7 +270,7 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
      */
     void updateBounds()
     {
-        _bounds = myPath.getBounds();
+        _bounds = path.getBounds();
         _bounds.grow(getComponentDrawOffset() + zoomGrow, getComponentDrawOffset()
                 + zoomGrow);
         setBounds(_bounds);
@@ -273,28 +278,28 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
 
     public ArcPath getArcPath()
     {
-        return myPath;
+        return path;
     }
 
     public boolean contains(int x, int y)
     {
-        Point2D.Double point = new Point2D.Double(x + myPath.getBounds().getX()
+        Point2D.Double point = new Point2D.Double(x + path.getBounds().getX()
                                                           - getComponentDrawOffset() - zoomGrow, y
-                + myPath.getBounds().getY() - getComponentDrawOffset() - zoomGrow);
+                + path.getBounds().getY() - getComponentDrawOffset() - zoomGrow);
         if(!ApplicationSettings.getApplicationView().getCurrentTab().isInAnimationMode())
         {
-            if(myPath.proximityContains(point) || _selected)
+            if(path.proximityContains(point) || _selected)
             {
                 // show also if Arc itself selected
-                myPath.showPoints();
+                path.showPoints();
             }
             else
             {
-                myPath.hidePoints();
+                path.hidePoints();
             }
         }
 
-        return myPath.contains(point);
+        return path.contains(point);
     }
 
     public void addedToGui()
@@ -305,11 +310,11 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
 
         if(getParent() instanceof PetriNetTab)
         {
-            myPath.addPointsToGui((PetriNetTab) getParent());
+            path.addPointsToGui((PetriNetTab) getParent());
         }
         else
         {
-            myPath.addPointsToGui((JLayeredPane) getParent());
+            path.addPointsToGui((JLayeredPane) getParent());
         }
         updateArcPosition();
         Container parent = getParent();
@@ -335,7 +340,7 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
             {
                 removeLabelFromParentContainer(label);
             }
-            myPath.forceHidePoints();
+            path.forceHidePoints();
             super.delete();
             _deleted = true;
             ApplicationSettings.getApplicationView().getCurrentPetriNetView().deleteArc(this.getId());
@@ -344,12 +349,12 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
 
     public void setPathToTransitionAngle(int angle)
     {
-        myPath.set_transitionAngle(angle);
+        path.set_transitionAngle(angle);
     }
 
     public HistoryItem split(Point2D.Float mouseposition)
     {
-        ArcPathPoint newPoint = myPath.splitSegment(mouseposition);
+        ArcPathPoint newPoint = path.splitSegment(mouseposition);
         return new AddArcPathPoint(this, newPoint);
     }
 
@@ -381,7 +386,7 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
                 removeLabelFromParentContainer(label);
             }
         }
-        myPath.forceHidePoints();
+        path.forceHidePoints();
         removeFromContainer();
     }
 
@@ -394,7 +399,7 @@ public abstract class ArcView extends PetriNetViewComponent implements Cloneable
                 getParent().add(label);
             }
         }
-        myPath.showPoints();
+        path.showPoints();
         view.add(this);
     }
 
