@@ -59,8 +59,7 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
 
 
     private Vector<Vector<String>> functionRelatedPlaces;
-	private int _selectedTokenTypeNumber;
-    
+
     private LinkedList<MarkingView>[] _initialMarkingVector;
     private LinkedList<MarkingView>[] _currentMarkingVector;
     private int[] _capacityMatrix;
