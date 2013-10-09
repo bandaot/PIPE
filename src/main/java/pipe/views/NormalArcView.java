@@ -51,11 +51,11 @@ public class NormalArcView extends ArcView implements Serializable
 
 	public NormalArcView(NormalArcView arc) {
 
-		for (int i = 0; i <= arc.myPath.getEndIndex(); i++) {
-			this.myPath.addPoint(arc.myPath.getPoint(i).getX(), arc.myPath
-					.getPoint(i).getY(), arc.myPath.getPointType(i));
+		for (int i = 0; i <= arc.path.getEndIndex(); i++) {
+			this.path.addPoint(arc.path.getPoint(i).getX(), arc.path
+					.getPoint(i).getY(), arc.path.getPointType(i));
 		}
-		this.myPath.createPath();
+		this.path.createPath();
 		this.updateBounds();
 		this._id = arc._id;
 		this.setSource(arc.getSource());
@@ -109,12 +109,11 @@ public class NormalArcView extends ArcView implements Serializable
         new NormalArc(source.getModel(), 
         		target.getModel()));//, _model.getWeight()));
 
-		copy.myPath.delete();
-		for (int i = 0; i <= this.myPath.getEndIndex(); i++) {
-			copy.myPath.addPoint(this.myPath.getPoint(i).getX() + despX,
-					this.myPath.getPoint(i).getY() + despY, this.myPath
-							.getPointType(i));
-			copy.myPath.selectPoint(i);
+		copy.path.delete();
+		for (int i = 0; i <= this.path.getEndIndex(); i++) {
+			copy.path.addPoint(this.path.getPoint(i).getX() + despX,
+					this.path.getPoint(i).getY() + despY, this.path.getPointType(i));
+			copy.path.selectPoint(i);
 		}
 
 		source.addOutbound(copy);
@@ -322,8 +321,8 @@ public class NormalArcView extends ArcView implements Serializable
 				RenderingHints.VALUE_ANTIALIAS_ON);
 
 		g2.translate(getComponentDrawOffset() + zoomGrow
-				- myPath.getBounds().getX(), getComponentDrawOffset() + zoomGrow
-				- myPath.getBounds().getY());
+				- path.getBounds().getX(), getComponentDrawOffset() + zoomGrow
+				- path.getBounds().getY());
 
 		AffineTransform reset = g2.getTransform();
 
@@ -334,20 +333,20 @@ public class NormalArcView extends ArcView implements Serializable
 		}
 
 		if (joined) {
-			g2.translate(myPath.getPoint(0).getX(), myPath.getPoint(0).getY());
-			g2.rotate(myPath.getStartAngle() + Math.PI);
+			g2.translate(path.getPoint(0).getX(), path.getPoint(0).getY());
+			g2.rotate(path.getStartAngle() + Math.PI);
 			g2.transform(ZoomController.getTransform(_zoomPercentage));
 			g2.fillPolygon(head);
 			g2.setTransform(reset);
 		}
 
 		g2.setStroke(new BasicStroke(0.01f * _zoomPercentage));
-		g2.draw(myPath);
+		g2.draw(path);
 
-		g2.translate(myPath.getPoint(myPath.getEndIndex()).getX(), myPath
-				.getPoint(myPath.getEndIndex()).getY());
+		g2.translate(path.getPoint(path.getEndIndex()).getX(), path
+				.getPoint(path.getEndIndex()).getY());
 
-		g2.rotate(myPath.getEndAngle() + Math.PI);
+		g2.rotate(path.getEndAngle() + Math.PI);
 		g2.setColor(java.awt.Color.WHITE);
 
 		g2.transform(ZoomController.getTransform(_zoomPercentage));
