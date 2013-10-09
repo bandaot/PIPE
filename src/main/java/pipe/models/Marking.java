@@ -22,8 +22,7 @@ public class Marking extends Observable implements Serializable
     }
     
     public Marking(Token token, int marking){
-    	_token = token;
-        _currentMarking = marking+"";
+        this(token, Integer.toString(marking));
     }
 
     public Token getToken()
