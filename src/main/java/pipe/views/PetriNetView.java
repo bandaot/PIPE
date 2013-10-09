@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Observable;
 import java.util.Observer;
@@ -17,7 +16,6 @@ import java.util.Vector;
 
 import javax.swing.JOptionPane;
 
-import org.apache.log4j.TTCCLayout;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -30,7 +28,6 @@ import pipe.gui.ApplicationSettings;
 import pipe.gui.Constants;
 import pipe.gui.Grid;
 import pipe.models.InhibitorArc;
-import pipe.models.Marking;
 import pipe.models.NormalArc;
 import pipe.models.PetriNet;
 import pipe.models.Transition;
@@ -50,17 +47,18 @@ import pipe.views.viewComponents.RateParameter;
 public class PetriNetView extends Observable implements Cloneable, IObserver, Serializable, Observer
 {
     //MOVED END
-    protected ArrayList<PlaceView> _placeViews; // Steve Doubleday:  protected to simplify testing
-    private ArrayList<TransitionView> _transitionViews;
-    private ArrayList<ArcView> _arcViews;
-    private ArrayList<InhibitorArcView> _inhibitorViews;
-    private ArrayList<AnnotationNote> _labels;
-    private ArrayList<RateParameter> _rateParameters;
+    protected ArrayList<PlaceView> _placeViews = new ArrayList<PlaceView>(); // Steve Doubleday:  protected to simplify testing
+    private ArrayList<TransitionView> _transitionViews = new ArrayList<TransitionView>();
+    private ArrayList<ArcView> _arcViews = new ArrayList<ArcView>();
+    private ArrayList<InhibitorArcView> _inhibitorViews = new ArrayList<InhibitorArcView>();
+    private ArrayList<AnnotationNote> _labels = new ArrayList<AnnotationNote>();
+    private ArrayList<RateParameter> _rateParameters = new ArrayList<RateParameter>();
 
+    private TokenSetController _tokenSetController = new TokenSetController();
 
     private Vector<Vector<String>> functionRelatedPlaces;
+    private LinkedList<MarkingView>[] _initialMarkingVector = null;
 
-    private LinkedList<MarkingView>[] _initialMarkingVector;
     private LinkedList<MarkingView>[] _currentMarkingVector;
     private int[] _capacityMatrix;
     private int[] _priorityMatrix;
@@ -68,35 +66,43 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
     private LinkedList<MarkingView>[] _markingVectorAnimationStorage;
     private static boolean _initialMarkingVectorChanged = true;
     private static boolean _currentMarkingVectorChanged = true;
-    private Hashtable _arcsMap;
-    private Hashtable _inhibitorsMap;
-    private ArrayList _stateGroups;
+    private Hashtable _arcsMap = new Hashtable();
+    private Hashtable _inhibitorsMap = new Hashtable();
+    private ArrayList<StateGroup> _stateGroups = new ArrayList<StateGroup>();
     private final HashSet _rateParameterHashSet = new HashSet();
     private PetriNetController _petriNetController;
     private PetriNet _model;
-	private TokenSetController _tokenSetController;
 
+    /**
+     * Register view to any model/controllers
+     */
+    private void registerSelf()
+    {
+        _model.registerObserver(this);
+        _tokenSetController.addObserver(this);
+    }
 
     public PetriNetView(String pnmlFileName)
     {
         _model = new PetriNet();
-        _petriNetController = ApplicationSettings.getPetriNetController();
-        _model.registerObserver(this);
-        initializeMatrices();
-        PNMLTransformer transform = new PNMLTransformer();
-        File temp = new File(pnmlFileName);
+        //TODO: Replace with FilenameUtils basename call
+        final File temp = new File(pnmlFileName);
         _model.setPnmlName(temp.getName());
+        _model.registerObserver(this);
+
+        _petriNetController = ApplicationSettings.getPetriNetController();
+
+        PNMLTransformer transform = new PNMLTransformer();
         createFromPNML(transform.transformPNML(pnmlFileName));
+
+        registerSelf();
     }
     
     public PetriNetView(PetriNetController petriNetController, PetriNet model)
     {
-        initializeMatrices();
-        _model = model;
-        model.registerObserver(this);
         _petriNetController = petriNetController;
-        initializeMatrices();
-        _model.registerObserver(this);
+        _model = model;
+        registerSelf();
     }
 
 
@@ -197,21 +203,21 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
         return result;
     }
     // Steve Doubleday (Oct 2013):  protected to simplify unit testing
-    protected void initializeMatrices()
-    {
-        _placeViews = new ArrayList();
-        _transitionViews = new ArrayList();
-        _arcViews = new ArrayList();
-        _inhibitorViews = new ArrayList();
-        _labels = new ArrayList();
-        _stateGroups = new ArrayList();
-        _rateParameters = new ArrayList();
-        _initialMarkingVector = null;
-        _arcsMap = new Hashtable();
-        _inhibitorsMap = new Hashtable();
-        _tokenSetController = new TokenSetController(); 
-        _tokenSetController.addObserver(this); 
-    }
+//    protected void initializeMatrices()
+//    {
+//        _placeViews = new ArrayList();
+//        _transitionViews = new ArrayList();
+//        _arcViews = new ArrayList();
+//        _inhibitorViews = new ArrayList();
+//        _labels = new ArrayList();
+//        _stateGroups = new ArrayList();
+//        _rateParameters = new ArrayList();
+//        _initialMarkingVector = null;
+//        _arcsMap = new Hashtable();
+//        _inhibitorsMap = new Hashtable();
+//        _tokenSetController = new TokenSetController();
+//        _tokenSetController.addObserver(this);
+//    }
 
     private void addPlace(PlaceView placeView)
     {
@@ -1886,15 +1892,20 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
     private void emptyPNML()
     {
         _model.resetPNML();
-        _placeViews = null;
-        _transitionViews = null;
-        _arcViews = null;
-        _labels = null;
-        _rateParameters = null;
+        _placeViews.clear();
+        _transitionViews.clear();
+        _arcViews.clear();
+        _inhibitorViews.clear();
+        _labels.clear();
+        _stateGroups.clear();
+        _rateParameters.clear();
         _initialMarkingVector = null;
-        _arcsMap = null;
-        _tokenSetController = null;
-        initializeMatrices();
+        _arcsMap.clear();
+        _inhibitorsMap.clear();
+
+//        TODO: Maybe add reset method to this to avoid creating a new one
+        _tokenSetController = new TokenSetController();
+        _tokenSetController.addObserver(this);
     }
 
 
@@ -2148,16 +2159,13 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
     /* (non-Javadoc)
       * @see pipe.models.interfaces.IPetriNet#createFromPNML(org.w3c.dom.Document)
       */
+    //TODO: refactor to remove the large if blocks
     public void createFromPNML(Document PNMLDoc)
     {
         emptyPNML();
-        Element element;
-        Node node;
-        NodeList nodeList;
-        
         try
         {
-            nodeList = PNMLDoc.getDocumentElement().getChildNodes();
+            NodeList nodeList = PNMLDoc.getDocumentElement().getChildNodes();
             if(ApplicationSettings.getApplicationView() != null)
             {
                 // Notifies used to indicate new instances.
@@ -2165,12 +2173,12 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
             }
             for(int i = 0; i < nodeList.getLength(); i++)
             {
-                node = nodeList.item(i);
+                Node node = nodeList.item(i);
 
                 if(node instanceof Element)
                 {
 
-                    element = (Element) node;
+                    Element element = (Element) node;
                     if("labels".equals(element.getNodeName()))
                     {
                         addAnnotation(createAnnotation(element));
@@ -2733,8 +2741,7 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
             {
                 for(PlaceView _placeView : _placeViews)
                 {
-                    if(placeID.equalsIgnoreCase(_placeView
-                                                        .getId()))
+                    if(placeID.equalsIgnoreCase(_placeView.getId()))
                     {
                         returnPlaceView = _placeView;
                     }
@@ -2875,8 +2882,11 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
         //TODO Replace this with a design pattern/better logic
         boolean taggedArc = isArcTagged(inputArcElement.getAttribute("tagged"));
         final String idInput = inputArcElement.getAttribute("id");
-        final ArcView arcView = type.equals("inhibitor") ? new InhibitorArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, new InhibitorArc(sourceIn.getModel(), targetIn.getModel())) :
+        final ArcView arcView = type.equals("inhibitor") ?
+                new InhibitorArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, new InhibitorArc(sourceIn.getModel(), targetIn.getModel())) :
                 new NormalArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, taggedArc, new NormalArc(sourceIn.getModel(), targetIn.getModel()));
+
+        arcView.addThisAsObserverToWeight(weightInput);
 
         arcView.addThisAsObserverToWeight(weightInput);
 

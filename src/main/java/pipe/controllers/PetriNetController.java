@@ -10,9 +10,9 @@ import java.util.ArrayList;
 public class PetriNetController implements IController, Serializable
 {
 
-    private ArrayList<PetriNetView> _views;
-    private ArrayList<PetriNet> _models;
-    private int _activePetriNet;
+    private ArrayList<PetriNetView> _views = new ArrayList<PetriNetView>();
+    private ArrayList<PetriNet> _models = new ArrayList<PetriNet>();
+    private int _activePetriNet = 0;
 
     public PetriNetController()
     {
@@ -20,11 +20,6 @@ public class PetriNetController implements IController, Serializable
         TransitionController transitionController = new TransitionController();
         TokenController tokenController = new TokenController();
         MarkingController markingController = new MarkingController(tokenController);
-        
-        if(_views == null)
-            _views = new ArrayList<PetriNetView>();
-        if(_models == null)
-            _models = new ArrayList<PetriNet>();
     }
 
     public PetriNetView getView()

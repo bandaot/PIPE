@@ -33,20 +33,23 @@ import java.util.jar.JarFile;
 
 public class PipeApplicationView extends JFrame implements ActionListener, Observer,Serializable
 {
-    public final StatusBar statusBar;
-    private JToolBar animationToolBar, drawingToolBar;
+    public final StatusBar statusBar = new StatusBar();
+    private JToolBar animationToolBar;
+    private JToolBar drawingToolBar;
     public JComboBox zoomComboBox;
     public JComboBox tokenClassComboBox;
     private HelpBox helpAction;
 
-    private final JSplitPane _moduleAndAnimationHistoryFrame;
+    private final JSplitPane _moduleAndAnimationHistoryFrame = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                                                               new ModuleManager().getModuleTree(),
+                                                               null);
     private static JScrollPane _scroller;
 
-    public final JTabbedPane _frameForPetriNetTabs;
-    private final ArrayList<PetriNetTab> _petriNetTabs;
+    public final JTabbedPane _frameForPetriNetTabs = new JTabbedPane();
+    private final ArrayList<PetriNetTab> _petriNetTabs = new ArrayList<PetriNetTab>();
     
     private static AnimationHistory _animationHistory;
-    private final Animator _animator;
+    private final Animator _animator = new Animator();
 
     private final PipeApplicationController _applicationController;
     private final PipeApplicationModel _applicationModel;
@@ -54,24 +57,22 @@ public class PipeApplicationView extends JFrame implements ActionListener, Obser
      * Constructor for unit testing only
      * @author stevedoubleday (Oct 2013)
      */
+    //TODO: Try to remove this
 	public PipeApplicationView()
 	{
-		statusBar = null;
-		_moduleAndAnimationHistoryFrame = null;
-		_frameForPetriNetTabs = null;
-		_petriNetTabs = null; 
-		_animator = null;
-		_applicationController = null; 	
-		_applicationModel = null; 
+        _applicationController = null;
+        _applicationModel = null;
 	}
+
 	public PipeApplicationView(PipeApplicationController applicationController, PipeApplicationModel applicationModel)
     {
         ApplicationSettings.register(this);
         _applicationController = applicationController;
         _applicationModel = applicationModel;
         _applicationModel.registerObserver(this);
-        _petriNetTabs = new ArrayList<PetriNetTab>();
-        setTitle(null);
+        _applicationModel.setMode(Constants.SELECT);
+        _applicationModel.selectAction.actionPerformed(null);
+
         try
         {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -81,51 +82,76 @@ public class PipeApplicationView extends JFrame implements ActionListener, Obser
             System.err.println("Error loading L&F: " + exc);
         }
 
-        this.setIconImage(new ImageIcon(Thread.currentThread().getContextClassLoader().getResource(ApplicationSettings.getImagePath() + "icon.png")).getImage());
+        setIcon();
+        setSizing();
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        this.setSize(screenSize.width * 80 / 100, screenSize.height * 80 / 100);
-        this.setLocationRelativeTo(null);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
         buildMenus();
-
-        // Status bar...
-        statusBar = new StatusBar();
-        getContentPane().add(statusBar, BorderLayout.PAGE_END);
-
-        // Build menus
+        buildStatusBar();
         buildToolbar();
 
         addWindowListener(new WindowHandler());
 
-        this.setForeground(java.awt.Color.BLACK);
-        this.setBackground(java.awt.Color.WHITE);
+        setTab();
+        setupLook();
+
+
+        //TODO: Why have they removed the controller?
+        //_applicationController.createNewPetriNet();
+        //TODO: What is this for?
+        createNewTab(null, false);
+    }
+
+    /**
+     * Sets up the look of the view and makes it visable
+     */
+    private void setupLook() {
+        setForeground(java.awt.Color.BLACK);
+        setBackground(java.awt.Color.WHITE);
+
+        setTitle(null);
 
         Grid.enableGrid();
 
-        _frameForPetriNetTabs = new JTabbedPane();
-        _animator = new Animator();
-        setTab();
-
-        ModuleManager moduleManager = new ModuleManager();
-        JTree moduleTree = moduleManager.getModuleTree();
-        _moduleAndAnimationHistoryFrame = new JSplitPane(JSplitPane.VERTICAL_SPLIT, moduleTree, null);
         _moduleAndAnimationHistoryFrame.setContinuousLayout(true);
         _moduleAndAnimationHistoryFrame.setDividerSize(0);
+
         JSplitPane pane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, _moduleAndAnimationHistoryFrame, _frameForPetriNetTabs);
         pane.setContinuousLayout(true);
         pane.setOneTouchExpandable(true);
         pane.setBorder(null); // avoid multiple borders
         pane.setDividerSize(8);
         getContentPane().add(pane);
-
         setVisible(true);
-        _applicationModel.setMode(Constants.SELECT);
-        _applicationModel.selectAction.actionPerformed(null);
 
+    }
 
-        //_applicationController.createNewPetriNet();
-        createNewTab(null, false);
+    private void buildStatusBar() {
+        getContentPane().add(statusBar, BorderLayout.PAGE_END);
+    }
+
+    /**
+     * Sets the size of the Application View and its location
+     */
+    private void setSizing() {
+        //TODO: Get rid of magic numbers
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        this.setSize(screenSize.width * 80 / 100, screenSize.height * 80 / 100);
+        this.setLocationRelativeTo(null);
+    }
+
+    /**
+     * Sets the view icon to icon.png
+     */
+    public void setIcon()
+    {
+        Thread currentThread = Thread.currentThread();
+        ClassLoader threadClassLoader = currentThread.getContextClassLoader();
+        String imagePath = ApplicationSettings.getImagePath() + "icon.png";
+        URL imageURL = threadClassLoader.getResource(imagePath);
+        ImageIcon icon = new ImageIcon(imageURL);
+        this.setIconImage(icon.getImage());
     }
 
     public int numberOfTabs()
@@ -144,6 +170,7 @@ public class PipeApplicationView extends JFrame implements ActionListener, Obser
      * printStackTrace if there is an exception caught in the setup for
      * the "extras.examples" folder.
      */
+    //TODO: Needs a serious refactor
     private void buildMenus()
     {
         JMenuBar menuBar = new JMenuBar();
@@ -742,8 +769,7 @@ public class PipeApplicationView extends JFrame implements ActionListener, Obser
                 {
                     // ProgressBar pb = new ProgressBar("test");
                     PNMLTransformer transformer = new PNMLTransformer();
-                    petriNetView.createFromPNML(transformer.transformPNML(file
-                                                                                  .getPath()));
+                    petriNetView.createFromPNML(transformer.transformPNML(file.getPath()));
                     petriNetTab.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
                 }
 
