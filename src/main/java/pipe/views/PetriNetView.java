@@ -2800,56 +2800,61 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
         return null;
     }
 
-    public ArcView createArc(Element inputArcElement)
+    /**
+     *
+     *
+     */ 
+    private MarkingView createMarkingView(TokenView tokenView, String marking)
     {
-        String idInput = null;
-        String sourceInput;
-        String targetInput;
-        LinkedList<MarkingView> weightInput = new LinkedList<MarkingView>();
-        LinkedList<Marking> weightModel = new LinkedList<Marking>();  //TODO appears unused; delete? 
-        boolean taggedArc;
-        sourceInput = inputArcElement.getAttribute("source");
-        targetInput = inputArcElement.getAttribute("target");
-        String idTempStorage = inputArcElement.getAttribute("id");
-        String sourceTempStorage = inputArcElement.getAttribute("source");
-        String targetTempStorage = inputArcElement.getAttribute("target");
-        String inscriptionTempStorage = inputArcElement.getAttribute("inscription");
-        String taggedTempStorage = inputArcElement.getAttribute("tagged");
-        taggedArc = !(taggedTempStorage.length() == 0 || taggedTempStorage.length() == 5);
+        //TODO Why do we replace this?
+        String value = marking.replace("@", ",");
+        return new MarkingView(tokenView, value);
+    }
 
-        if(idTempStorage.length() > 0)
-            idInput = idTempStorage;
-        if(sourceTempStorage.length() > 0)
-            sourceInput = sourceTempStorage;
-        if(targetTempStorage.length() > 0)
-            targetInput = targetTempStorage;
-        if(inscriptionTempStorage.length() > 0)
+    private LinkedList<MarkingView> calculateWeightInput(final String inscription)
+    {
+        final LinkedList<MarkingView> weightInput = new LinkedList<MarkingView>();
+        if (!inscription.isEmpty())
         {
-            String[] stringArray = inscriptionTempStorage.split(",");
-            if(stringArray.length == 1)
-            {	
-            	stringArray[0].replace("@", ",");
-                MarkingView markingView = new MarkingView(getActiveTokenView(),stringArray[0]);// Integer.valueOf(stringArray[0])+"");
-                Marking marking = new Marking(getActiveTokenView().getModel(), stringArray[0]);//Integer.valueOf(stringArray[0])+"");
-                weightInput.add(markingView);
-                weightModel.add(marking);
-            }
-            else
+            String[] commaDelimitedInscription = inscription.split(",");
+            if(commaDelimitedInscription.length == 1)
             {
-                int i = 0;
-                while(i < stringArray.length)
-                {
-                	stringArray[i + 1]= stringArray[i + 1].replace("@", ",");
-                    MarkingView markingView = new MarkingView(this.getTokenClassFromID(stringArray[i]), stringArray[i + 1]);//Integer.valueOf(stringArray[i + 1])+"");
-                    Marking marking = new Marking(getTokenClassFromID(stringArray[i]).getModel(), stringArray[i + 1]);//Integer.valueOf(stringArray[i + 1])+"");
-                    weightInput.add(markingView);
-                    weightModel.add(marking);
-                    i += 2;
-                }
+                MarkingView marking = createMarkingView(getActiveTokenView(), commaDelimitedInscription[0]);
+                weightInput.add(marking);
+                return weightInput;
             }
-        }
 
+            for (int i = 0; i < commaDelimitedInscription.length; i += 2)
+            {
+                MarkingView marking = createMarkingView(this.getTokenClassFromID(commaDelimitedInscription[i]), commaDelimitedInscription[i+1]);
+                weightInput.add(marking);
+            }
+
+        }
+        return weightInput;
+    }
+
+    /**
+     *
+     * @param taggedXML
+     * @return true if an arc is tagged
+     */
+    private boolean isArcTagged(String taggedXML)
+    {
+        // TODO: What is this magic number logic?
+        return !(taggedXML.isEmpty() || taggedXML.length() == 5);
+    }
+
+    public ArcView createArc(final Element inputArcElement)
+    {
+        final String inscriptionInput = inputArcElement.getAttribute("inscription");
+        final LinkedList<MarkingView> weightInput = calculateWeightInput(inscriptionInput);
+
+
+        final String sourceInput = inputArcElement.getAttribute("source");
         ConnectableView sourceIn = getPlaceTransitionObject(sourceInput);
+
+        final String targetInput = inputArcElement.getAttribute("target");
         ConnectableView targetIn = getPlaceTransitionObject(targetInput);
 
         // add the insets and offset
@@ -2859,7 +2864,7 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
         int aEndx = targetIn.getX() + targetIn.centreOffsetLeft();
         int aEndy = targetIn.getY() + targetIn.centreOffsetTop();
 
-        ArcView tempArcView;
+
 
         String type = "normal"; // default value
         NodeList nl = inputArcElement.getElementsByTagName("type");
@@ -2868,23 +2873,24 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
             type = ((Element) (nl.item(0))).getAttribute("type");
         }
 
-        if(type.equals("inhibitor"))
-        {
-            tempArcView = new InhibitorArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, new InhibitorArc(sourceIn.getModel(), targetIn.getModel()));//, weightModel));
-        }
-        else
-        {
-            tempArcView = new NormalArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, taggedArc, new NormalArc(sourceIn.getModel(), targetIn.getModel()));//, weightModel));
-        }
-        tempArcView.addThisAsObserverToWeight(weightInput);
-        getPlaceTransitionObject(sourceInput).addOutbound(tempArcView);
-        getPlaceTransitionObject(targetInput).addInbound(tempArcView);
+        //TODO Replace this with a design pattern/better logic
+        boolean taggedArc = isArcTagged(inputArcElement.getAttribute("tagged"));
+        final String idInput = inputArcElement.getAttribute("id");
+        final ArcView arcView = type.equals("inhibitor") ? new InhibitorArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, new InhibitorArc(sourceIn.getModel(), targetIn.getModel())) :
+                new NormalArcView((double) aStartx, (double) aStarty, (double) aEndx, (double) aEndy, sourceIn, targetIn, weightInput, idInput, taggedArc, new NormalArc(sourceIn.getModel(), targetIn.getModel()));
 
-        // **********************************************************************************
-        // The following section attempts to load and display arcpath
-        // details****************
+        arcView.addThisAsObserverToWeight(weightInput);
+
+        sourceIn.addOutbound(arcView);
+        targetIn.addInbound(arcView);
 
         // NodeList nodelist = inputArcElement.getChildNodes();
+        loadAndViewArcPaths(inputArcElement, arcView);
+
+        return arcView;
+    }
+
+    private void loadAndViewArcPaths(Element inputArcElement, ArcView tempArcView) {
         NodeList nodelist = inputArcElement.getElementsByTagName("arcpath");
         if(nodelist.getLength() > 0)
         {
@@ -2913,11 +2919,6 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
                 }
             }
         }
-
-        // Arc path creation ends
-        // here***************************************************************
-        // ******************************************************************************************
-        return tempArcView;
     }
 
     public String getPNMLName()
