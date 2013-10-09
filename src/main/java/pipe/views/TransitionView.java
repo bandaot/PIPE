@@ -142,8 +142,7 @@ public class TransitionView extends ConnectableView implements Serializable
         String newName = getNewTransitionName(_nameLabel.getName(), model);
         newTransition._nameLabel.setName(newName);
 
-
-        this.newCopy(newTransition);
+        newCopy(newTransition);
 
         newTransition._nameOffsetX = this._nameOffsetX;
         newTransition._nameOffsetY = this._nameOffsetY;
@@ -161,22 +160,28 @@ public class TransitionView extends ConnectableView implements Serializable
         return newTransition;
     }
 
+    //TODO Refactor shared transition creation code.
     public TransitionView copy()
     {
-        TransitionView copy = new TransitionView((double) ZoomController.getUnzoomedValue(this.getX(), _zoomPercentage), (double) ZoomController.getUnzoomedValue(this.getY(), _zoomPercentage));
-        copy._nameLabel.setName(this.getName());
-        copy._nameOffsetX = this._nameOffsetX;
-        copy._nameOffsetY = this._nameOffsetY;
-        copy._timed = this._timed;
-        copy._model.setRateExpr(getRate());
-        copy._angle = this._angle;
-        copy._attributesVisible = this._attributesVisible;
-        copy._model.setPriority(_model.getPriority());
-        copy.setOriginal(this);
-        copy._rateParameter = this._rateParameter;
-        return copy;
+        double zoomedX = ZoomController.getUnzoomedValue(getX(), _zoomPercentage);
+        double zoomedY = ZoomController.getUnzoomedValue(getY(), _zoomPercentage);
+
+        TransitionView newTransition = new TransitionView(zoomedX, zoomedY);
+
+        newTransition._nameLabel.setName(this.getName());
+        newTransition._nameOffsetX = this._nameOffsetX;
+        newTransition._nameOffsetY = this._nameOffsetY;
+        newTransition._timed = this._timed;
+        newTransition._model.setRateExpr(getRate());
+        newTransition._angle = this._angle;
+        newTransition._attributesVisible = this._attributesVisible;
+        newTransition._model.setPriority(_model.getPriority());
+        newTransition.setOriginal(this);
+        newTransition._rateParameter = this._rateParameter;
+        return newTransition;
     }
-    
+
+    //TODO: Should check cast
     public void paintComponent(Graphics g)
     {
         super.paintComponent(g);
@@ -1025,47 +1030,7 @@ public class TransitionView extends ConnectableView implements Serializable
         for(ArcView tempArcView : inboundArcs())
             tempArcView.addToView(view);
     }
-    /**
-     * 
-     * 
-     * 
-     * @return
-     */
-//	public String get_functionalRateExpr() {
-//		return _model.getfunctionalRates();
-//	}
-	
-//	public String getFRateExpr(){
-//		if(_functionalRateExpr==null){
-//			return "null";
-//		}else{
-//			return _functionalRateExpr;
-//		}
-//	}
 
-//	public HistoryItem setRateExpr(String frx) {
-//		String oldRate = _model.getfunctionalRates();
-//		_model.setfunctionalRates(frx);
-//		repaint();
-//		return new TransitionRate(this,oldRate, _model.getfunctionalRates());
-//	}
-//	
-//	public void setFRateExpr(String _functionalRateExpr){
-//		_nameLabel.setText(getAttributes());
-//		this._functionalRateExpr=_functionalRateExpr;
-//	}
-
-//	public void setRateType(String string) {
-//		// TODO Auto-generated method stub
-//		if(string.equals("F")){
-//			fratetype=true;
-//			cratetype=false;
-//		}else if(string.equals("C")){
-//			fratetype=false;
-//			cratetype=true;
-//		}
-//	}
-//	
 	public boolean isConst(){
 		try{
     		Double.parseDouble(_model.getRateExpr());
@@ -1075,11 +1040,6 @@ public class TransitionView extends ConnectableView implements Serializable
     	}
 	}
 
-//	public void setRateExprSet(boolean b) {
-//		// TODO Auto-generated method stub
-//		rateExprSet=b;
-//	}
-	
 	public HistoryItem setRate(double rate)
     {	
         String oldRate = _model.getRateExpr();
@@ -1129,11 +1089,4 @@ public class TransitionView extends ConnectableView implements Serializable
         String title = "Error";
         JOptionPane.showMessageDialog(null, message, title, JOptionPane.YES_NO_OPTION);
     }
-	/**
-	 * 
-	 * 
-	 * 
-	 * 
-	 */
-
 }
