@@ -113,41 +113,52 @@ public class TransitionView extends ConnectableView implements Serializable
         _delayForShowingWarnings = delayForShowingWarnings;
     }
 
+    private String getNewTransitionName(String originalName, PetriNetView view)
+    {
+        StringBuilder newNameBuilder = new StringBuilder();
+        newNameBuilder.append(originalName)
+                .append("(")
+                .append(getCopyNumber())
+                .append(")");
+
+        while(!view.checkTransitionIDAvailability(newNameBuilder.toString()))
+        {
+            newNameBuilder.append("'");
+        }
+        return newNameBuilder.toString();
+    }
+
+    //TODO: Remove fromAnotherView, its never used!
     public TransitionView paste(double x, double y, boolean fromAnotherView, PetriNetView model)
     {
-        TransitionView copy = new TransitionView((double) Grid.getModifiedX(x + this.getX() + Constants.PLACE_TRANSITION_HEIGHT / 2), (double) Grid.getModifiedY(y + this.getY() + Constants.PLACE_TRANSITION_HEIGHT / 2));
-        String newName = this._nameLabel.getName() + "(" + this.getCopyNumber() + ")";
-        boolean properName = false;
+        double rawX = x + getX() + Constants.PLACE_TRANSITION_HEIGHT / 2;
+        double newX = Grid.getModifiedX(rawX);
 
-        while(!properName)
-        {
-            if(model.checkTransitionIDAvailability(newName))
-            {
-                copy._nameLabel.setName(newName);
-                properName = true;
-            }
-            else
-            {
-                newName = newName + "'";
-            }
-        }
+        double rawY = y + getY() + Constants.PLACE_TRANSITION_HEIGHT / 2;
+        double newY = Grid.getModifiedY(rawY);
 
-        this.newCopy(copy);
+        TransitionView newTransition = new TransitionView(newX, newY);
 
-        copy._nameOffsetX = this._nameOffsetX;
-        copy._nameOffsetY = this._nameOffsetY;
+        String newName = getNewTransitionName(_nameLabel.getName(), model);
+        newTransition._nameLabel.setName(newName);
 
-        copy._timed = this._timed;
-        copy._model.setRateExpr(_model.getRateExpr());
-        copy._angle = this._angle;
 
-        copy._attributesVisible = this._attributesVisible;
-        copy._model.setPriority(_model.getPriority());
-        copy._path.transform(AffineTransform.getRotateInstance(Math.toRadians(copy._angle), TRANSITION_HEIGHT / 2, TRANSITION_HEIGHT / 2));
-        copy._rateParameter = null;
+        this.newCopy(newTransition);
+
+        newTransition._nameOffsetX = this._nameOffsetX;
+        newTransition._nameOffsetY = this._nameOffsetY;
+
+        newTransition._timed = this._timed;
+        newTransition._model.setRateExpr(_model.getRateExpr());
+        newTransition._angle = this._angle;
+
+        newTransition._attributesVisible = this._attributesVisible;
+        newTransition._model.setPriority(_model.getPriority());
+        newTransition._path.transform(AffineTransform.getRotateInstance(Math.toRadians(newTransition._angle), TRANSITION_HEIGHT / 2, TRANSITION_HEIGHT / 2));
+        newTransition._rateParameter = null;
         
         
-        return copy;
+        return newTransition;
     }
 
     public TransitionView copy()
