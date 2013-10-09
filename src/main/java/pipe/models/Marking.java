@@ -45,8 +45,7 @@ public class Marking extends Observable implements Serializable
     
     public void setCurrentMarking(int marking)
     {
-        _currentMarking = marking+"";
-        notifyObservers();
+        setCurrentMarking(Integer.toString(marking));
     }
 
     public String getCurrentMarking()

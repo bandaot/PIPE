@@ -66,7 +66,7 @@ public class MarkingView extends JComponent implements Serializable, Observer
 
     public void setCurrentMarking(int marking)
     {
-        _model.setCurrentMarking(marking+"");
+        _model.setCurrentMarking(marking);
     }
     public void setCurrentMarking(String marking)
     {
