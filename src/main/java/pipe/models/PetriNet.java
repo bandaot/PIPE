@@ -1,5 +1,9 @@
 package pipe.models;
 
+import org.w3c.dom.Document;
+import pipe.utilities.transformers.PNMLTransformer;
+import pipe.utilities.transformers.TNTransformer;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
@@ -17,6 +21,7 @@ public class PetriNet extends Observable implements Serializable
     private ArrayList<Marking> _markings;
     private ArrayList<Arc> _arcs;
 
+
     public String getPnmlName()
     {
         return _pnmlName;
@@ -25,6 +30,17 @@ public class PetriNet extends Observable implements Serializable
     public void setPnmlName(String pnmlName)
     {
         _pnmlName = pnmlName;
+    }
+
+    public Document getXMLDocument(boolean isTN)
+    {
+        if(isTN)
+        {
+            TNTransformer transformer = new TNTransformer();
+            return transformer.transformTN(_pnmlName);
+        }
+        PNMLTransformer transformer = new PNMLTransformer();
+        return transformer.transformPNML(_pnmlName);
     }
 
     public boolean isValidated()

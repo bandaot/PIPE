@@ -1,6 +1,7 @@
 package pipe.actions;
 
 import pipe.gui.ApplicationSettings;
+import pipe.gui.PetriNetTab;
 import pipe.utilities.Expander;
 import pipe.views.PetriNetView;
 import pipe.views.PipeApplicationView;
@@ -38,6 +39,8 @@ public class UnfoldAction extends GuiAction
         }
         Expander expander = new Expander(ApplicationSettings.getApplicationView().getCurrentPetriNetView());
         PetriNetView unfolded = expander.unfold();
-        pipeApplicationView.createNewTab(expander.saveAsXml(unfolded), false);
+        PetriNetTab tab = ApplicationSettings.getApplicationController().createNewTab(unfolded);
+        pipeApplicationView.addPetriNetTab(expander.saveAsXml(unfolded).getName(), tab);
+        unfolded.createFromPNML(false);
     }
 }

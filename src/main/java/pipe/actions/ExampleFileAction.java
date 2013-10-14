@@ -1,7 +1,11 @@
 package pipe.actions;
 
+import pipe.controllers.PipeApplicationController;
 import pipe.gui.ApplicationSettings;
+import pipe.gui.PetriNetTab;
 import pipe.io.JarUtilities;
+import pipe.views.PetriNetView;
+import pipe.views.PipeApplicationView;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -28,7 +32,12 @@ public class ExampleFileAction extends GuiAction
 
     public void actionPerformed(ActionEvent e)
     {
-        ApplicationSettings.getApplicationView().createNewTab(filename, false);
+        PipeApplicationController controller = ApplicationSettings.getApplicationController();
+        PetriNetView petriNetView = controller.createPetriNetViewFromFile(filename.getAbsolutePath());
+        PetriNetTab tab = controller.createNewTab(petriNetView);
+        ApplicationSettings.getApplicationView().addPetriNetTab(filename.getName(), tab);
+        petriNetView.createFromPNML(false);
+        //petriNetView.createFromPNML(false);
     }
 
 }

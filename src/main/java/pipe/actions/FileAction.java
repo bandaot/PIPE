@@ -4,6 +4,7 @@ import pipe.controllers.PipeApplicationController;
 import pipe.gui.ApplicationSettings;
 import pipe.gui.Export;
 import pipe.gui.PetriNetTab;
+import pipe.views.PetriNetView;
 import pipe.views.PipeApplicationView;
 import pipe.gui.widgets.FileBrowser;
 import pipe.models.PipeApplicationModel;
@@ -43,7 +44,11 @@ public class FileAction extends GuiAction
             if((filePath != null) && filePath.exists() && filePath.isFile() && filePath.canRead())
             {
                 _userPath = filePath.getParent();
-                pipeApplicationView.createNewTab(filePath, false);
+                PetriNetView petriNetView = pipeApplicationController.createPetriNetViewFromFile(filePath.getAbsolutePath());
+                PetriNetTab tab = pipeApplicationController.createNewTab(petriNetView);
+                pipeApplicationView.addPetriNetTab(filePath.getName(), tab);
+                petriNetView.createFromPNML(false);
+//                pipeApplicationView.createNewTab(filePath, false);
             }
             if((filePath != null) && (!filePath.exists()))
             {
@@ -76,7 +81,10 @@ public class FileAction extends GuiAction
             }
             else if(this == pipeApplicationModel.createAction)
             {
-                pipeApplicationView.createNewTab(null, false); // Create a new tab
+
+                PetriNetView petriNetView = pipeApplicationController.createEmptyPetriNetView();
+                PetriNetTab tab = pipeApplicationController.createNewTab(petriNetView);
+                pipeApplicationView.addPetriNetTab("Petri net " + pipeApplicationModel.newPetriNetNumber(), tab);
             }
             else if((this == pipeApplicationModel.exitAction) && pipeApplicationView.checkForSaveAll())
             {

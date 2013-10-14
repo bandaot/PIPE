@@ -3,6 +3,7 @@ package pipe.controllers;
 import pipe.gui.ApplicationSettings;
 import pipe.gui.CopyPasteManager;
 import pipe.gui.PetriNetTab;
+import pipe.models.PetriNet;
 import pipe.models.PipeApplicationModel;
 import pipe.views.PetriNetView;
 import pipe.views.PipeApplicationView;
@@ -16,6 +17,10 @@ public class PipeApplicationController
     private final PipeApplicationModel _applicationModel;
     private PipeApplicationView _applicationView;
 
+    /**
+     * Launches a new PipeApplicationView
+     * @param applicationModel
+     */
     public PipeApplicationController(PipeApplicationModel applicationModel)
     {
         _petriNetController = new PetriNetController();
@@ -53,6 +58,24 @@ public class PipeApplicationController
     public void showPasteRectangle(PetriNetTab appView)
     {
         _copyPasteManager.showPasteRectangle(appView);
+    }
+
+    public PetriNetView createEmptyPetriNetView()
+    {
+        return _petriNetController.addEmptyPetriNet();
+    }
+
+    public PetriNetView createPetriNetViewFromFile(String path)
+    {
+        return _petriNetController.createPetriNetViewFromFile(path);
+    }
+
+    public PetriNetTab createNewTab(PetriNetView petriNetView)
+    {
+        PetriNetTab tab = new PetriNetTab(petriNetView);
+        petriNetView.addObserver(tab); // Add the view as Observer
+        petriNetView.addObserver(ApplicationSettings.getApplicationView()); // Add the app window as observer
+        return tab;
     }
 
 

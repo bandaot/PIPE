@@ -1,12 +1,18 @@
 package pipe.views;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import org.mockito.Mockito;
+import org.w3c.dom.Document;
 import pipe.models.PetriNet;
 import pipe.utilities.transformers.PNMLTransformer;
 import pipe.utilities.transformers.PNMLTransformerTest;
@@ -17,13 +23,22 @@ public class PetriNetViewTest
 	private PetriNetView petriNetView;
 	private PlaceView placeView;
 	private MarkingView markingView;
+    private PetriNet mockModel;
 
 	@Before
 	public void setUp() throws Exception
 	{
-		petriNetView = new PetriNetView(null, new PetriNet());
+        mockModel = Mockito.mock(PetriNet.class);
+		petriNetView = new PetriNetView(null, mockModel);
 	}
-	@Test
+//    TODO: SHould test String constructor but plan to remove it
+    @Test
+    public void registersSelfAsModelObserver()
+    {
+        PetriNetView view = new PetriNetView(null, mockModel);
+        verify(mockModel, times(1)).registerObserver(view);
+    }
+    @Test
 	public void verifyAnimationModePossibleForNewPetriNewViewWhenNetFileHasToken() throws Exception
 	{
 		checkAnimationModePossibleForNewPetriNet(PNMLTransformerTest.SIMPLE_NET_WITH_TOKEN); 
@@ -46,9 +61,11 @@ public class PetriNetViewTest
 	protected void buildPetriNetViewFromXmlString(String net)
 			throws TransformerFactoryConfigurationError
 	{
-		PNMLTransformer transformer = new PNMLTransformer(); 
-		petriNetView.createFromPNML(transformer.transformPNMLStreamSource(PNMLTransformerTest
-				.getNetAsStreamSource(net)));
+        PNMLTransformer transformer = new PNMLTransformer();
+        Document doc = transformer.transformPNMLStreamSource(PNMLTransformerTest
+                .getNetAsStreamSource(net));
+        when(mockModel.getXMLDocument(anyBoolean())).thenReturn(doc);
+        petriNetView.createFromPNML(false);
 	}
 	@Test
 	public void verifyInitialPlaceMarkingIgnoredIfCorrespondingTokenDoesNotExist() throws Exception

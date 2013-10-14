@@ -1,6 +1,6 @@
 package pipe.views;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,6 +34,7 @@ import pipe.models.Transition;
 import pipe.models.interfaces.IObserver;
 import pipe.utilities.Copier;
 import pipe.utilities.transformers.PNMLTransformer;
+import pipe.utilities.transformers.TNTransformer;
 import pipe.views.viewComponents.AnnotationNote;
 import pipe.views.viewComponents.Note;
 import pipe.views.viewComponents.Parameter;
@@ -92,8 +93,8 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
 
         _petriNetController = ApplicationSettings.getPetriNetController();
 
-        PNMLTransformer transform = new PNMLTransformer();
-        createFromPNML(transform.transformPNML(pnmlFileName));
+        //TODO: Remove this call?
+        createFromPNML(false);
 
         registerSelf();
     }
@@ -133,11 +134,11 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
     }
     public LinkedList<TokenView> getTokenViews()
     {
-    	return (LinkedList<TokenView>) _tokenSetController.getTokenViews(); 
+    	return (LinkedList<TokenView>) _tokenSetController.getTokenViews();
     }
 	public LinkedList<TokenView> getAllTokenViews()
 	{
-		return (LinkedList<TokenView>) _tokenSetController.getAllTokenViews(); 
+		return (LinkedList<TokenView>) _tokenSetController.getAllTokenViews();
 	}
 
     public TokenView getActiveTokenView()
@@ -2160,8 +2161,9 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
       * @see pipe.models.interfaces.IPetriNet#createFromPNML(org.w3c.dom.Document)
       */
     //TODO: refactor to remove the large if blocks
-    public void createFromPNML(Document PNMLDoc)
+    public void createFromPNML(boolean isTN)
     {
+        Document PNMLDoc = _model.getXMLDocument(isTN);
         emptyPNML();
         try
         {
@@ -2935,6 +2937,11 @@ public class PetriNetView extends Observable implements Cloneable, IObserver, Se
         return _model.getPnmlName();
     }
 
+    public void setPNMLFile(String path, boolean isTN)
+    {
+        _model.setPnmlName(path);
+
+    }
     /**
      * @author yufeiwang 
      * @return

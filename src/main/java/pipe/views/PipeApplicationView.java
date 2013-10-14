@@ -96,11 +96,17 @@ public class PipeApplicationView extends JFrame implements ActionListener, Obser
         setTab();
         setupLook();
 
+        createBlankPetriNetTab();
+    }
 
-        //TODO: Why have they removed the controller?
-        //_applicationController.createNewPetriNet();
-        //TODO: What is this for?
-        createNewTab(null, false);
+    /**
+     * Creates an empty Petrinet on a tab
+     */
+    private void createBlankPetriNetTab()
+    {
+        PetriNetView petriNetView = _applicationController.createEmptyPetriNetView();
+        PetriNetTab tab = _applicationController.createNewTab(petriNetView);
+        this.addPetriNetTab("Petri net " + _applicationModel.newPetriNetNumber(), tab);
     }
 
     /**
@@ -715,80 +721,16 @@ public class PipeApplicationView extends JFrame implements ActionListener, Obser
         }
     }
 
-    public void createNewTab(File file, boolean isTN)
+    public void addPetriNetTab(String name, PetriNetTab tab)
     {
-         int freeSpace = _applicationController.addEmptyPetriNetTo(_petriNetTabs);;
-
-        String name = "";
-        if(_applicationController.isPasteInProgress())
-        {
-            _applicationController.cancelPaste();
-        }
-
-        PetriNetView petriNetView = getPetriNetView(freeSpace);
-        PetriNetTab petriNetTab = getTab(freeSpace);
-
-        petriNetView.addObserver(petriNetTab); // Add the view as Observer
-        petriNetView.addObserver(this); // Add the app window as
-        // observer
-
-        if(file == null)
-        {
-            name = "Petri net " + (_applicationModel.newPetriNetNumber());
-        }
-        else
-        {
-        	setFile(file, freeSpace);
-            name = file.getName().split(".xml")[0];
-        }
-
-        petriNetTab.setNetChanged(false); // Status is unchanged
-
-        JScrollPane scroller = new JScrollPane(petriNetTab);
+        _petriNetTabs.add(tab);
+        JScrollPane scroller = new JScrollPane(tab);
         // make it less bad on XP
         scroller.setBorder(new BevelBorder(BevelBorder.LOWERED));
         _frameForPetriNetTabs.addTab(name, null, scroller, null);
-        _frameForPetriNetTabs.setSelectedIndex(freeSpace);
-
-        petriNetTab.updatePreferredSize();
-        
-        // CH Aug 2, 2012: Shifted this to the bottom, so that it
-        // will wait until the tab has been created before loading
-        // data. This was causing a crash when no tabs were open.
-        if( file != null ){
-        	try
-            {
-                // BK 10/02/07: Changed loading of PNML to accomodate new
-                // PNMLTransformer class
-                if(isTN)
-                {
-                    TNTransformer transformer = new TNTransformer();
-                    petriNetView.createFromPNML(transformer.transformTN(file.getPath()));
-                }
-                else
-                {
-                    // ProgressBar pb = new ProgressBar("test");
-                    PNMLTransformer transformer = new PNMLTransformer();
-                    petriNetView.createFromPNML(transformer.transformPNML(file.getPath()));
-                    petriNetTab.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
-                }
-
-                
-            }
-            catch(Exception e)
-            {
-                JOptionPane.showMessageDialog(this,
-                                              "Error loading file:\n" + name + "\n"
-                                                      + e.toString(), "File load error",
-                                              JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-                return;
-            }
-        }
+        _frameForPetriNetTabs.setSelectedIndex(_petriNetTabs.size() - 1);
         refreshTokenClassChoices(); // Steve Doubleday: ensure combo box reflects tokens that were loaded
-        setTitle(name);// Change the program caption
-        _frameForPetriNetTabs.setTitleAt(freeSpace, name);
-        _applicationModel.selectAction.actionPerformed(null);
+        setTitle(name);
     }
 
     /*

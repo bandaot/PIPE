@@ -70,10 +70,8 @@ public class PipeApplicationModel implements Serializable
         _name = "PIPE: Platform Independent Petri Net Editor " + version;
         _zoomExamples = new String[]{"40%", "60%", "80%", "100%","120%", "140%", "160%", "180%", "200%", "300%"};
         _editionAllowed = true;
-        boolean dragging = false;
         newNameCounter = 0;
         registerActions();
-        ArrayList<PetriNet> petriNets = new ArrayList<PetriNet>();
 
     }
 
@@ -96,17 +94,6 @@ public class PipeApplicationModel implements Serializable
         pasteAction = new EditAction("Paste", "Paste (Ctrl-V)", "ctrl V");
         deleteAction = new DeleteAction("Delete", "Delete selection", "DELETE");
         selectAction = new TypeAction("Select", Constants.SELECT, "Select components", "S", true);
-
-        Action actionListener = new AbstractAction()
-        {
-            public void actionPerformed(ActionEvent actionEvent)
-            {
-                if(isEditionAllowed())
-                {
-                    selectAction.actionPerformed(null);
-                }
-            }
-        };
 
         placeAction = new TypeAction("Place", Constants.PLACE, "Add a place", "P", true);
         transAction = new TypeAction("Immediate transition", Constants.IMMTRANS, "Add an immediate transition", "I", true);
